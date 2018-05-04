@@ -3,6 +3,19 @@
 NAME=Ruby
 BASE_REPO=ruby
 VARIANTS=(browsers node node-browsers)
+IMAGE_CUSTOMIZATIONS='
+RUN if [ "x$BUNDLER_VERSION" = "1.16.0" ] ; then \
+  echo "Using current bundler" ; \
+else \
+  set -e \
+  && cd /usr/local/lib/ruby/gems/$RUBY_MAJOR.0/specifications \
+  && mv default/bundler-1.16.0.gemspec . \
+  && gem uninstall -i /usr/local/lib/ruby/gems/$RUBY_MAJOR.0 -x bundler \
+  && cd /usr/local/lib/ruby/site_ruby/$RUBY_MAJOR.0/ \
+  && rm -rf bundler bundler.rb \
+  && gem install bundler -v 1.15.4 ; \
+fi
+'
 
 source ../shared/images/generate-node.sh
 source ../shared/images/generate.sh

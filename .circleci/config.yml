@@ -104,6 +104,18 @@ jobs:
       - run: sudo pip install awscli==1.14.17
       - run: cd ./shared/images; ./refresh-tools-cache
 
+  only_build_image: &only_build_image
+    machine: true
+    working_directory: ~/circleci-bundles
+    steps:
+      - checkout
+      - run:
+          name: Build Images Only
+          command: |
+            export NEW_ORG=notnoopci
+
+            make -j $PLATFORM/only_build_images
+
   publish_image: &publish_image
     machine: true
     working_directory: ~/circleci-bundles
@@ -125,7 +137,12 @@ jobs:
             make -j $PLATFORM/publish_images
       - store_artifacts:
           path: "."
-          destination: circleci-bundles
+          estination: circleci-bundles
+
+  build_ruby:
+    <<: *only_build_image
+    environment:
+      - PLATFORM: ruby
 
   publish_android:
     <<: *publish_image
@@ -221,6 +238,16 @@ workflow_filters: &workflow_filters
   filters:
     branches:
       only:
+        - master
+        - production
+        - parallel
+
+only_build_filters: &only_build_filters
+  requires:
+    - generate_dockerfiles
+  filters:
+    branches:
+      ignore:
         - master
         - production
         - parallel

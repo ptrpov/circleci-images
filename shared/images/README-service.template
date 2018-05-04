@@ -1,22 +1,23 @@
-Experimental CircleCI images for {{NAME}}.
+CircleCI images for {{NAME}}
 
-Extends the official image of [{{NAME}}](https://dockerhub.com/_/{{BASE_REPO}}) to be friendly to use in CircleCI for testing.
+_**Note:** due to Docker Hub limitations, there may be more variants available than are displayed on the Tags page. For a complete list, along with Dockerfiles, see our **[circleci-dockerfiles](https://github.com/CircleCI-Public/circleci-dockerfiles)** repository._
 
-The following is the customizations CircleCI applies in a `Dockerfile`:
+_Images from [hub.docker.com/r/circleci](https://hub.docker.com/r/circleci) are tracked in circleci-dockerfile's **[master branch](https://github.com/circleci-public/circleci-dockerfiles)**; images from [hub.docker.com/r/ccistaging](https://hub.docker.com/r/ccistaging) are tracked in circleci-dockerfile's **[staging branch](https://github.com/CircleCI-Public/circleci-dockerfiles/tree/staging)**._
 
-```dockerfile
-{{DOCKERFILE_BASIC_SAMPLE}}
-```
+## Why
 
-Aiming to have CircleCI extended images ease adoption of Docker and CircleCI.  Once users are successful, we encourage users to build and customize their images to suite their individual project needs.
+Extends the official image of [{{NAME}}](https://hub.docker.com/_/{{BASE_REPO}}) for better use on CircleCI.
 
-# Experimental
+We aim to have CircleCI-extended images ease adoption of Docker and CircleCI. Once users are successful, we encourage them to build and customize images to suit their individual projects' needs.
 
-CircleCI is experimenting with this service image and we may change it in future in an incompatible way.  Users should consider building their own image or locking the image digest in CircleCI configuration files.
+## Experimental
 
-# User Feedback
+CircleCI is experimenting with this image and may change it in the future in an incompatible way. Users should consider building their own image or pinning a specific `sha256` digest from this image in their CircleCI configuration file.
 
-## Issues
+## User Feedback
 
-If you have any problems with or questions about this image, please contact us on [CircleCI Discuss Forum](https://discuss.circleci.com/c/circleci-2-0).
+If you have any problems with or questions about this image, please contact us on [CircleCI's Discuss forum](https://discuss.circleci.com/c/circleci-2-0).
 
+## Source
+
+https://github.com/circleci/circleci-images

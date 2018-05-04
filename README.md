@@ -24,18 +24,13 @@ https://hub.docker.com/explore/
 CircleCI supported images are here:
 https://hub.docker.com/r/circleci/
 
-To view the Dockerfiles for CircleCI images, check the artifacts tab of the latest green job for this repo:
-https://circleci.com/gh/circleci/circleci-images/tree/master
-
-The Dockerfiles aren't available on Docker Hub.  Currently, they can only be uploaded with Docker Hub's automated builder.
-
-
+To view the Dockerfiles for CircleCI images, visit the [CircleCI-Public/circleci-dockerfiles](https://github.com/circleci-public/circleci-dockerfiles) repository.
 
 # How to add a bundle with images
 
 A bundle is a top-level subfolder in this repository (e.g. `postgres`).
 
-For the image Dockerfiles, we use a WIP templating mechanism.  Each bundle should contain a `generate-images` script for generating the Dockerfiles.  You can use [`postgres/generate-images`](postgres/generate-images) and [`node/generate-images`](node/generate-images) for inspiration.  The pattern is is executable script of the following sample:
+For the image Dockerfiles, we use a WIP templating mechanism.  Each bundle should contain a `generate-images` script for generating the Dockerfiles.  You can use [`postgres/generate-images`](postgres/generate-images) and [`node/generate-images`](node/generate-images) for inspiration.  The pattern is executable script of the following sample:
 
 
 ```bash

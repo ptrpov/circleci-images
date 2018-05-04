@@ -58,6 +58,9 @@ RUN curl --silent --show-error --location --fail --retry 3 --output /tmp/sbt.tgz
   && rm /tmp/sbt.tgz \
   && /opt/sbt/bin/sbt sbtVersion
 
+# Install openjfx
+RUN apt-get install -y --no-install-recommends openjfx
+
 EOF
 
   # Modify path but don't inject builder path in there!

@@ -39,9 +39,15 @@ refresh_cache docker-compose-latest \
 refresh_cache dockerize-latest.tar.gz \
 	$(curl --location --fail --retry 3 https://api.github.com/repos/jwilder/dockerize/releases/latest | jq -r '.assets[] | select(.name | startswith("dockerize-linux-amd64")) | .browser_download_url')
 
-PHANTOMJS_VERSION=$(curl --location --fail --retry 3  https://api.github.com/repos/ariya/phantomjs/tags | jq -r '.[0].name')
-refresh_cache phantomjs-latest.tar.bz2 \
-	"https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2"
+LATEST_PHANTOMJS_URL=$(curl --location --fail --retry 3  \
+	https://api.bitbucket.org/2.0/repositories/ariya/phantomjs/downloads | \
+	jq '[.values[].links.self.href]' | jq "map(select(contains(\"beta\") | not))" | \
+	jq "map(select(contains(\"x86_64\")))" | jq '.[0]' | \
+	sed 's/\"//g')
 
+refresh_cache phantomjs-latest.tar.bz2 \
+	${LATEST_PHANTOMJS_URL}
+
+# need to ignore Release candidate and milestone releases to get stable ones
 refresh_cache sbt-latest.tgz \
-	$(curl --location --fail --retry 3 https://api.github.com/repos/sbt/sbt/releases/latest  | grep browser_download_url | grep 'tgz"' | grep -o -e 'https.*.tgz')
+	$(curl --location --fail --retry 3 https://api.github.com/repos/sbt/sbt/releases | grep browser_download_url | grep 'tgz"' | grep -o -e 'https.*.tgz' | grep -v -e '-RC' -e '-M' | head -n1)

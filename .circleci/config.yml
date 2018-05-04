@@ -17,14 +17,92 @@ jobs:
       - store_artifacts:
           path: /tmp/dockerfiles
           destination: Dockerfiles
+      # upload Dockerfiles to circleci-public/circleci-dockerfiles repo
+      - add_ssh_keys:
+          fingerprints:
+            - "af:0a:93:75:51:75:1f:16:90:d9:97:b1:7a:bb:f0:27"
+      - run:
+          name: git config
+          command: |
+            git config --global user.email "$CIRCLE_USERNAME@users.noreply.github.com"
+            git config --global user.name "$CIRCLE_USERNAME"
+      - run: git clone git@github.com:CircleCI-Public/circleci-dockerfiles.git
+      # only push Dockerfiles to github on circleci-images pushes to "master" or "production"
+      - run:
+          name: branch control flow & git push
+          working_directory: circleci-dockerfiles
+          command: |
+            if [[ "$CIRCLE_BRANCH" == "production" ]]
+            then
+              export DOCKERFILES_BRANCH=master
+            fi
+            if [[ "$CIRCLE_BRANCH" == "master" ]]
+            then
+              export DOCKERFILES_BRANCH=staging
+            fi
+            if [ ! -e $DOCKERFILES_BRANCH ]
+            then
+              git checkout $DOCKERFILES_BRANCH
+              cp -rfv /tmp/dockerfiles/* ~/repo/circleci-dockerfiles
+              git add .
+              git commit --allow-empty -m "Dockerfiles from $CIRCLE_BUILD_URL"
+              git push -f origin $DOCKERFILES_BRANCH
+            fi
+
+  generate_automated_build_images:
+    working_directory: ~/repo
+    docker:
+      - image: gcc:7
+    steps:
+      - checkout
+      - run:
+          name: Generate Dockerfiles, READMEs for automated builds
+          command: |
+            mkdir /tmp/example-images
+            make -j
+            make example_images
+      - store_artifacts:
+          path: /tmp/example-images
+      - add_ssh_keys:
+          fingerprints:
+            - "9c:e2:cf:bb:f2:25:4d:05:d9:b0:30:bf:73:c5:7d:8f"
+      - run:
+          name: git config
+          command: |
+            git config --global user.email "$CIRCLE_USERNAME@users.noreply.github.com"
+            git config --global user.name "$CIRCLE_USERNAME"
+
+      - run: git clone git@github.com:CircleCI-Public/example-images.git
+
+      # only push example Dockerfiles/READMEs to GitHub on circleci-images pushes to "master" or "production"
+      - run:
+          name: branch control flow & git push
+          working_directory: example-images
+          command: |
+            if [[ "$CIRCLE_BRANCH" == "production" ]]
+            then
+              export EXAMPLE_IMAGES_BRANCH=master
+            fi
+            if [[ "$CIRCLE_BRANCH" == "master" ]]
+            then
+              export EXAMPLE_IMAGES_BRANCH=staging
+            fi
+            if [ ! -e $EXAMPLE_IMAGES_BRANCH ]
+            then
+              git checkout $EXAMPLE_IMAGES_BRANCH
+              cp -rfv /tmp/example-images/* ~/repo/example-images
+              git add .
+              git commit --allow-empty -m "example images from $CIRCLE_BUILD_URL"
+              git push -f origin $EXAMPLE_IMAGES_BRANCH
+            fi
 
   refresh_tools_cache:
     docker:
-    - image: circleci/python:latest
+      - image: circleci/python:latest
     steps:
-    - checkout
-    - run: sudo pip install awscli
-    - run: cd ./shared/images; ./refresh-tools-cache
+      - checkout
+      - run: sudo pip install awscli==1.14.17
+      - run: cd ./shared/images; ./refresh-tools-cache
 
   only_build_image: &only_build_image
     machine: true
@@ -49,7 +127,7 @@ jobs:
       - run:
           name: Build and Publish Images
           command: |
-            export COMPUTED_ORG=notnoopci
+            export COMPUTED_ORG=ccistaging
             if [[ "$CIRCLE_BRANCH" == "production" ]]
             then
               export COMPUTED_ORG=circleci
@@ -98,6 +176,11 @@ jobs:
     environment:
       - PLATFORM: php
 
+  publish_redis:
+    <<: *publish_image
+    environment:
+      - PLATFORM: redis
+
   publish_postgres:
     <<: *publish_image
     environment:
@@ -122,6 +205,11 @@ jobs:
     <<: *publish_image
     environment:
       - PLATFORM: elixir
+
+  publish_rust:
+    <<: *publish_image
+    environment:
+      - PLATFORM: rust
 
   publish_jruby:
     <<: *publish_image
@@ -166,18 +254,10 @@ only_build_filters: &only_build_filters
 
 workflows:
   version: 2
-  build:
-    jobs:
-      - generate_dockerfiles
-  build_dockerfiles_and_images:
-    jobs:
-      - generate_dockerfiles
-      - build_ruby: *only_build_filters
-
   build_test_deploy:
     triggers:
       - schedule:
-          cron: "0 0 * * 0"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
@@ -199,6 +279,7 @@ workflows:
       - publish_ruby:     *workflow_filters
       - publish_golang:   *workflow_filters
       - publish_php:      *workflow_filters
+      - publish_redis:    *workflow_filters
       - publish_postgres: *workflow_filters
       - publish_mariadb:  *workflow_filters
       - publish_mysql:    *workflow_filters
@@ -207,10 +288,12 @@ workflows:
       - publish_jruby:    *workflow_filters
       - publish_clojure:  *workflow_filters
       - publish_openjdk:  *workflow_filters
+      - publish_rust:     *workflow_filters
       - publish_buildpack-deps:   *workflow_filters
   commit:
     jobs:
       - generate_dockerfiles
+      - generate_automated_build_images
       - refresh_tools_cache:
           requires:
           - generate_dockerfiles
@@ -226,6 +309,7 @@ workflows:
       - publish_ruby:     *workflow_filters
       - publish_golang:   *workflow_filters
       - publish_php:      *workflow_filters
+      - publish_redis:    *workflow_filters
       - publish_postgres: *workflow_filters
       - publish_mariadb:  *workflow_filters
       - publish_mysql:    *workflow_filters
@@ -234,4 +318,5 @@ workflows:
       - publish_jruby:    *workflow_filters
       - publish_clojure:  *workflow_filters
       - publish_openjdk:  *workflow_filters
+      - publish_rust:     *workflow_filters
       - publish_buildpack-deps:   *workflow_filters

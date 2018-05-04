@@ -14,8 +14,7 @@ RUN php -r "copy('https://raw.githubusercontent.com/composer/getcomposer.org/mas
     php -r "unlink('composer-setup.php');" && \
     mv composer.phar /usr/local/bin/composer
 
-# xdebug is not compatible with 7.2 yet
-RUN if php-config --version | grep -q 7.2; then echo "skipping xdebug, not supported"; else pecl install xdebug && docker-php-ext-enable xdebug; fi
+RUN (pecl install xdebug || pecl install xdebug-2.5.5) && docker-php-ext-enable xdebug
 
 EOF
 )
